@@ -2,9 +2,27 @@
 
 > Skills, agents, and tools for documenting features and maintaining FOLIO microservices with behavioral documentation.
 
-## Overview
+## Installation
 
-FOLIO is a large-scale microservices architecture. Keeping documentation synchronized with code is challenging—this plugin provides tools for **document-driven development** that keep documentation accurate and useful for both humans and AI agents.
+### From GitHub (recommended)
+
+```bash
+/plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
+```
+
+Or from within Claude Code:
+
+```
+/plugin > Install from URL
+Enter: https://github.com/yauhen-vavilkin/folio-dev-plugin
+```
+
+### Local Development
+
+```bash
+git clone https://github.com/yauhen-vavilkin/folio-dev-plugin.git
+claude --plugin-dir ./folio-dev-plugin
+```
 
 ## What's Included
 
@@ -16,25 +34,9 @@ FOLIO is a large-scale microservices architecture. Keeping documentation synchro
 
 ## Quick Start
 
-### Installation
+### Using the Document Feature Skill
 
-1. Copy the skill to your FOLIO module:
-
-```bash
-mkdir -p .claude/skills
-cp /path/to/folio-dev-plugin/skills/document-feature/SKILL.md \
-   .claude/skills/document-feature.md
-```
-
-2. Ensure your `docs/` directory exists:
-
-```bash
-mkdir -p docs/features
-```
-
-### Usage
-
-After implementing a feature on a branch:
+After installing the plugin and implementing a feature on a branch:
 
 ```bash
 /document-feature
@@ -48,9 +50,11 @@ The skill will:
 5. Generate `docs/features/[feature-name].md`
 6. Update `docs/features.md` index
 
-## Documentation Format
+### Documentation Format
 
 Feature documentation uses **behavioral description**—focusing on WHAT features do and WHY they exist, not HOW they're implemented.
+
+Example output:
 
 ```markdown
 ---
@@ -74,14 +78,15 @@ Direct database queries for user permissions were creating performance bottlenec
 ```
 folio-dev-plugin/
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin metadata
-├── knowledge-base/              # Research and best practices
+│   ├── plugin.json              # Plugin metadata
+│   └── marketplace.json          # Marketplace configuration
+├── knowledge-base/               # Research and best practices
 │   └── DDD research.md
-├── skills/                      # Skill definitions
+├── skills/                       # Skill definitions
 │   └── document-feature/
 │       └── SKILL.md
-├── claude-code.md               # Project overview and philosophy
-└── README.md                    # This file
+├── claude-code.md                # Project overview and philosophy
+└── README.md                     # This file
 ```
 
 ## Philosophy
@@ -97,13 +102,15 @@ See [claude-code.md](claude-code.md) for:
 1. Follow the [Claude Code Plugin](https://github.com/anthropics/claude-plugins-official) conventions
 2. Document in `claude-code.md` when adding new skills
 3. Add research and examples to `knowledge-base/`
-4. Test on real FOLIO modules before committing
+4. Test on real FOLIO modules before submitting
 
 ## License
 
 Apache-2.0
 
-## References
+## Links
 
-- [Official Claude Code Plugins](https://github.com/anthropics/claude-plugins-official)
-- [FOLIO Developer Documentation](https://dev.folio.org/)
+- **Repository**: https://github.com/yauhen-vavilkin/folio-dev-plugin
+- **Issues**: https://github.com/yauhen-vavilkin/folio-dev-plugin/issues
+- **FOLIO Developer Documentation**: https://dev.folio.org/
+- **Claude Code Documentation**: https://code.claude.com/docs/en/plugins
