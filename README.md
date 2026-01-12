@@ -4,41 +4,10 @@
 
 ## Installation
 
-### Configure the Marketplace
-
-Add this marketplace to your Claude Code settings:
-
-**Repository-level** (`.claude/settings.json` or `.claude/settings.local.json`):
-```json
-{
-  "marketplaces": [
-    {
-      "name": "folio-dev",
-      "url": "https://github.com/yauhen-vavilkin/folio-dev-plugin",
-      "type": "github"
-    }
-  ]
-}
-```
-
-**User-level** (global settings):
-```bash
-# Edit your global Claude Code settings
-claude config edit
-```
-
-Add the marketplace configuration to your settings file.
-
-### Install Plugins
-
-Once the marketplace is configured:
+Install the marketplace directly from GitHub:
 
 ```bash
-# List available plugins
-/plugin list
-
-# Install a plugin
-/plugin install folio-dev@folio-dev
+/plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
 ```
 
 ## Available Plugins
