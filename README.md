@@ -1,46 +1,58 @@
-# FOLIO Development Plugin for Claude Code
+# FOLIO Development Marketplace for Claude Code
 
-> Skills, agents, and tools for documenting features and maintaining FOLIO microservices with behavioral documentation.
+> A marketplace of plugins, skills, and tools for documenting features and maintaining FOLIO microservices.
 
 ## Installation
 
-### Option 1: Local Plugin Development (for testing)
+### Configure the Marketplace
 
-```bash
-git clone https://github.com/yauhen-vavilkin/folio-dev-plugin.git
-cd folio-dev-plugin
-claude --plugin-dir .
+Add this marketplace to your Claude Code settings:
+
+**Repository-level** (`.claude/settings.json` or `.claude/settings.local.json`):
+```json
+{
+  "marketplaces": [
+    {
+      "name": "folio-dev",
+      "url": "https://github.com/yauhen-vavilkin/folio-dev-plugin",
+      "type": "github"
+    }
+  ]
+}
 ```
 
-### Option 2: Manual Skill Installation (recommended for production)
-
-Copy the skill to your FOLIO module:
-
+**User-level** (global settings):
 ```bash
-# Clone or download the plugin
-git clone https://github.com/yauhen-vavilkin/folio-dev-plugin.git
-
-# Copy the skill to your module
-mkdir -p .claude/skills
-cp folio-dev-plugin/skills/document-feature/SKILL.md \
-   .claude/skills/document-feature.md
+# Edit your global Claude Code settings
+claude config edit
 ```
 
-### Option 3: Submit to Official Marketplace
+Add the marketplace configuration to your settings file.
 
-To make this plugin installable via `/plugin install`, it needs to be added to the [official Claude Code marketplace](https://github.com/anthropics/claude-plugins-official). This requires submitting a PR to include it in `external_plugins/`.
+### Install Plugins
 
-## What's Included
+Once the marketplace is configured:
 
-### Skills
+```bash
+# List available plugins
+/plugin list
 
+# Install a plugin
+/plugin install folio-dev@folio-dev
+```
+
+## Available Plugins
+
+### folio-dev
+
+Skills and tools for FOLIO microservices development with behavioral documentation.
+
+**Skills:**
 | Skill | Description | Invocation |
 |-------|-------------|------------|
 | `document-feature` | Analyzes code changes and generates behavioral feature documentation | `/document-feature` |
 
-## Quick Start
-
-### Using the Document Feature Skill
+**Quick Start:**
 
 After installing the plugin and implementing a feature on a branch:
 
@@ -56,59 +68,43 @@ The skill will:
 5. Generate `docs/features/[feature-name].md`
 6. Update `docs/features.md` index
 
-### Documentation Format
-
-Feature documentation uses **behavioral description**—focusing on WHAT features do and WHY they exist, not HOW they're implemented.
-
-Example output:
-
-```markdown
----
-feature_id: user-permissions-cache
-title: User Permissions Cache
-status: active
-updated: 2025-01-12
----
-
-# User Permissions Cache
-
-## What it does
-Caches user permission lookups to reduce database load during permission checks.
-
-## Why it exists
-Direct database queries for user permissions were creating performance bottlenecks...
-```
-
-## Project Structure
+## Marketplace Structure
 
 ```
-folio-dev-plugin/
-├── .claude-plugin/
-│   ├── plugin.json              # Plugin metadata
-│   └── marketplace.json          # Marketplace configuration
-├── knowledge-base/               # Research and best practices
+folio-dev-plugin/                    # Marketplace root
+├── marketplace.json                 # Marketplace configuration
+├── plugins/
+│   └── folio-dev/                   # Individual plugin
+│       ├── .claude-plugin/
+│       │   └── plugin.json          # Plugin metadata
+│       ├── skills/
+│       │   └── document-feature/
+│       │       └── SKILL.md         # Skill definition
+│       └── README.md                # Plugin documentation
+├── knowledge-base/                  # Shared research and best practices
 │   └── DDD research.md
-├── skills/                       # Skill definitions
-│   └── document-feature/
-│       └── SKILL.md
-├── claude-code.md                # Project overview and philosophy
-└── README.md                     # This file
+├── claude-code.md                   # Project overview and philosophy
+└── README.md                        # This file
 ```
 
 ## Philosophy
 
-See [claude-code.md](claude-code.md) for:
-- Why this plugin exists
+This marketplace follows **document-driven development** principles. See [claude-code.md](claude-code.md) for:
+- Why this marketplace exists
 - What we're building
 - Development roadmap
 - Research foundation
 
 ## Contributing
 
-1. Follow the [Claude Code Plugin](https://github.com/anthropics/claude-plugins-official) conventions
-2. Document in `claude-code.md` when adding new skills
-3. Add research and examples to `knowledge-base/`
-4. Test on real FOLIO modules before submitting
+We welcome new plugins and skills for FOLIO development:
+
+1. Follow the [Claude Code Plugin](https://code.claude.com/docs/en/plugins) conventions
+2. Add your plugin under `plugins/your-plugin-name/`
+3. Update `marketplace.json` to include your plugin
+4. Document in `claude-code.md` when adding major features
+5. Add research and examples to `knowledge-base/`
+6. Test on real FOLIO modules before submitting
 
 ## License
 
@@ -116,7 +112,6 @@ Apache-2.0
 
 ## Links
 
-- **Repository**: https://github.com/yauhen-vavilkin/folio-dev-plugin
-- **Issues**: https://github.com/yauhen-vavilkin/folio-dev-plugin/issues
+- **Marketplace Repository**: https://github.com/yauhen-vavilkin/folio-dev-plugin
 - **FOLIO Developer Documentation**: https://dev.folio.org/
 - **Claude Code Documentation**: https://code.claude.com/docs/en/plugins
