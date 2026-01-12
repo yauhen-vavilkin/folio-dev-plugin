@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "folio-dev",
+  "description": "FOLIO development marketplace - plugins, skills, and tools for documenting features and maintaining FOLIO microservices",
+  "owner": {
+    "name": "yauhen-vavilkin",
+    "email": "your-email@example.com"
+  },
+  "plugins": [
+    {
+      "name": "folio-dev",
+      "description": "Skills and tools for FOLIO microservices development with behavioral documentation",
+      "author": {
+        "name": "Yauhen Vavilkin"
+      },
+      "source": "./plugins/folio-dev",
+      "category": "development",
+      "homepage": "https://github.com/yauhen-vavilkin/folio-dev-plugin#readme"
+    }
+  ]
+}
