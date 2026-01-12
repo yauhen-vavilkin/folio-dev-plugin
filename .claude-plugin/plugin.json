@@ -1,0 +1,11 @@
+{
+  "name": "folio-dev",
+  "description": "FOLIO development plugin for Claude Code - skills, agents, and tools for documenting features and maintaining FOLIO microservices",
+  "version": "0.1.0",
+  "author": {
+    "name": "FOLIO Development Team"
+  },
+  "homepage": "https://github.com/folio-org",
+  "license": "Apache-2.0",
+  "keywords": ["folio", "library", "microservices", "documentation", "java", "spring"]
+}
