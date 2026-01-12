@@ -4,25 +4,31 @@
 
 ## Installation
 
-### From GitHub (recommended)
-
-```bash
-/plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
-```
-
-Or from within Claude Code:
-
-```
-/plugin > Install from URL
-Enter: https://github.com/yauhen-vavilkin/folio-dev-plugin
-```
-
-### Local Development
+### Option 1: Local Plugin Development (for testing)
 
 ```bash
 git clone https://github.com/yauhen-vavilkin/folio-dev-plugin.git
-claude --plugin-dir ./folio-dev-plugin
+cd folio-dev-plugin
+claude --plugin-dir .
 ```
+
+### Option 2: Manual Skill Installation (recommended for production)
+
+Copy the skill to your FOLIO module:
+
+```bash
+# Clone or download the plugin
+git clone https://github.com/yauhen-vavilkin/folio-dev-plugin.git
+
+# Copy the skill to your module
+mkdir -p .claude/skills
+cp folio-dev-plugin/skills/document-feature/SKILL.md \
+   .claude/skills/document-feature.md
+```
+
+### Option 3: Submit to Official Marketplace
+
+To make this plugin installable via `/plugin install`, it needs to be added to the [official Claude Code marketplace](https://github.com/anthropics/claude-plugins-official). This requires submitting a PR to include it in `external_plugins/`.
 
 ## What's Included
 
