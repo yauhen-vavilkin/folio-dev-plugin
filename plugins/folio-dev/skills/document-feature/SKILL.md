@@ -1,7 +1,7 @@
 ---
 name: document-feature
 description: This skill should be used when the user asks to "document feature", "create feature documentation", "write documentation for this feature", or discusses documenting implemented features. The skill analyzes git diff between master and current branch, infers the feature name, and generates behavioral documentation in docs/features/.
-version: 0.1.0
+version: 0.2.0
 license: Apache-2.0
 ---
 
@@ -108,8 +108,19 @@ Format: "kebab-case" (e.g., `user-permissions-cache.md`)
 
 ### 3. Deep code inspection
 
-Read the changed files to identify:
-- **Endpoints**: Look at controller classes, `@RestController`, `@GetMapping`, etc.
+**First, read the changed files** to identify:
+- New services, caches, events, or configuration changes
+- Modified business logic in service classes
+- New or updated event handlers
+
+**Then, trace upward to find affected endpoints:**
+Many features enhance existing functionality without changing controllers. To find affected endpoints:
+1. Identify the modified service classes (e.g., `CapabilityService`)
+2. Use `Grep` to find controllers that inject/use this service: `grep -r "CapabilityService" src/main/java --include="*Controller.java"`
+3. Read the controller files to extract endpoint details
+4. Document the endpoint even if the controller wasn't changed
+
+**Also identify:**
 - **Caching**: Look for `@Cacheable`, cache configuration in `application.yml`
 - **Events**: Look for event classes, `@EventListener`, Kafka listeners
 - **Configuration**: Look for new properties in `application.yml`
@@ -120,7 +131,6 @@ Read the changed files to identify:
 If any of the following are unclear from the code, ask the user:
 - **Business rationale**: Why was this feature needed? What problem does it solve?
 - **Configuration choices**: Why was this TTL/size chosen? What are the tradeoffs?
-- **External consumers**: Who consumes this endpoint or event?
 - **Edge cases**: Are there any special behaviors or constraints not obvious from code?
 
 ### 5. Generate documentation
@@ -153,11 +163,19 @@ If the changes are minor (typo fixes, refactoring with no behavior change, test 
 
 When you see changes like:
 - New `UserPermissionCacheService` with `@Cacheable`
+- Modified `CapabilityService.getUserPermissions()` to use the cache
 - New `UserPermissionsChangedEvent` and event handler
 - Cache configuration in `application.yml`
 
+**Trace upward to find the endpoint:**
+1. Modified service: `CapabilityService`
+2. Find controllers: `grep -r "CapabilityService" src/main/java --include="*Controller.java"`
+3. Found: `PermissionsUsersController` injects `CapabilityService`
+4. Extract endpoint: `GET /permissions-users/{userId}`
+
 You would infer this is a "user permissions cache" feature and document:
-- What: Caches user permission lookups
+- What: Caches user permission lookups, accessed via `GET /permissions-users/{userId}`
 - Why: Database query was slow/expensive
+- Endpoint: Documents the REST endpoint even though the controller wasn't changed
 - Caching: tenant-scoped cache with user and tenant eviction events
 - Configuration: TTL and max size variables
