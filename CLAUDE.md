@@ -1,4 +1,6 @@
-# FOLIO Development Plugin for Claude Code
+# FOLIO Development Marketplace for Claude Code
+
+> A marketplace of plugins, skills, and tools for documenting features and maintaining FOLIO microservices.
 
 ## Why This Exists
 
@@ -9,168 +11,142 @@ FOLIO is a large-scale microservices architecture with dozens of Java/Spring/Qua
 - **AI context limitations**: AI agents need behavioral documentation to effectively modify and extend features
 - **Inconsistent documentation**: Different teams use different formats and approaches
 
-This plugin addresses these challenges by providing **document-driven development** tools that keep documentation synchronized with code.
+This marketplace provides **document-driven development** tools that keep documentation synchronized with code.
 
 ## What We're Building
 
-A Claude Code plugin containing skills, agents, and tools specifically designed for FOLIO microservices development:
+A **marketplace** (collection of plugins) containing skills, agents, and tools for FOLIO microservices development:
 
-- **`/document-feature`** skill: Analyzes code changes and generates behavioral feature documentation
-- **Future skills**: Test generation, code review, ADR creation, and more
+- **`folio-dev` plugin**: Contains the `/document-feature` skill
+- **Future**: Test generation, code review, and more skills
 
 ### Philosophy: Behavioral Documentation
 
-Following the research in `knowledge-base/DDD research.md`, we focus on **behavioral documentation**—capturing WHAT features do and WHY they exist, not HOW they're implemented. This approach:
+Following the research in `knowledge-base/DDD research.md`, we focus on **behavioral documentation**—capturing WHAT features do and WHY they exist, not HOW they're implemented.
 
-- Helps AI agents understand features without reading implementation code
-- Provides onboarding material for new developers
-- Documents business rules and invariants explicitly
-- Keeps documentation stable even when implementation changes
-
-## Project Structure
+## Project Structure (Marketplace)
 
 ```
-folio-dev-plugin/
+folio-dev-plugin/                    # Marketplace root
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin metadata
-├── knowledge-base/              # Research and best practices
-│   └── DDD research.md          # Document-driven development research
-├── skills/                      # Skill definitions
-│   └── document-feature/
-│       └── SKILL.md             # Feature documentation skill
-├── agents/                      # (Future) Agent definitions
-├── commands/                    # (Future) Slash commands
-├── claude-code.md               # This file
-└── README.md                    # Plugin overview
+│   └── marketplace.json             # Marketplace configuration
+├── plugins/
+│   └── folio-dev/                   # Individual plugin
+│       ├── .claude-plugin/
+│       │   └── plugin.json          # Plugin metadata
+│       ├── skills/
+│       │   └── document-feature/
+│       │       └── SKILL.md         # Skill definition
+│       └── README.md                # Plugin documentation
+├── knowledge-base/                  # Research and best practices
+│   └── DDD research.md
+├── CLAUDE.md                        # This file
+└── README.md                        # Marketplace overview
+```
+
+**Key convention**: `marketplace.json` must be inside `.claude-plugin/`, not at root.
+
+## Installation
+
+```bash
+/plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
 ```
 
 ## Documentation Format
 
-Feature documentation follows this structure:
+Feature documentation in FOLIO modules follows this structure:
 
 ```
 docs/
-├── features.md                  # Feature index (table of contents)
+├── features.md                      # Feature index (table of contents)
 └── features/
-    └── [feature-name].md        # Individual feature documentation
+    └── [feature-name].md            # Individual feature documentation (flat, no subfolders)
 ```
 
 Each feature document includes:
 
 - **What it does**: Observable behavior from external perspective
 - **Why it exists**: Business rationale and problem solved
-- **Endpoint(s)**: REST endpoints exposed by the feature
-- **Business rules**: Behavioral invariants and constraints
-- **Caching**: Cache behavior, eviction triggers, configuration
-- **Configuration**: Variables that control the feature
-- **Dependencies**: Interactions with other services/modules
+- **Endpoint(s)**: REST endpoints (if applicable - skip section if none)
+- **Business rules**: Behavioral constraints
+- **Caching**: Cache behavior, eviction triggers (if applicable)
+- **Configuration**: Variables that control the feature (name only, defaults in README)
+- **Dependencies**: Events published/consumed, service interactions
 
-## Approach
+## Decisions Made (Session History)
 
-### 1. Manual Invocation, Smart Automation
+### Frontmatter Decisions
+- **No `owners` field**: Do not include in YAML frontmatter
+- **No `created` field**: Only `updated` is needed
+- **No `invariants` array**: Merge into business rules
 
-The `/document-feature` skill is invoked manually by developers after implementing a feature. This ensures:
+### Content Decisions
+- **No "Related decisions" / ADR sections**: We describe features only, not link to ADRs
+- **No UI/consumer documentation**: Backend modules only, no UI references
+- **No separate "Invariants" section**: Merged into "Business rules and constraints"
+- **Configuration variables**: Describe what they control, but defaults live in README
 
-- Documentation is only written for meaningful changes
-- The developer can provide context during the interview phase
-- The skill doesn't accidentally document trivial fixes
+### Skill Design Decisions
+- **Generic patterns, not module-specific**: Use placeholders, not specific class names
+- **Endpoint tracing**: When service changes, trace upward to find affected controllers
+- **Handle non-endpoint features**: Event processors, scheduled jobs, internal utilities
 
-### 2. Interview-First Documentation
+### Skill Version History
+- **0.1.0**: Initial version
+- **0.2.0**: Added endpoint discovery via flow tracing
+- **0.3.0**: Made skill generic, removed module-specific details, added non-endpoint handling
 
-The skill recognizes when code alone is insufficient and asks the developer for:
+## Document-Feature Skill Workflow
 
-- Business rationale not visible in code
-- Configuration choices and tradeoffs
-- External consumers and cross-service interactions
-- Edge cases and special behaviors
+1. **Analyze changes**: `git diff master...HEAD --stat`
+2. **Infer feature name**: Propose options, ask user to confirm
+3. **Deep code inspection**:
+   - Read changed files (services, caches, events, config)
+   - **Trace upward**: Find controllers using modified services (`grep -r "ServiceName" src/main/java --include="*Controller.java"`)
+   - **Conditional endpoints**: Include section only if endpoints found
+4. **Interview user**: Ask about unclear business rationale, config choices, edge cases
+5. **Generate documentation**: Write directly to `docs/features/[name].md` and update index
 
-### 3. Module-Scoped Skills
-
-Each FOLIO module installs its own copy of the skill, allowing for:
-
-- Module-specific customization
-- Independent documentation maintenance
-- Clear ownership boundaries
-
-### 4. Behavioral Focus
-
-Documentation describes contracts and behavior, not implementation:
-
-- **DO**: "Cache entries are evicted when user permissions change"
-- **DON'T**: "Cache eviction is handled by UserPermissionCacheEvictor using Caffeine"
-
-## Usage
-
-### Installing the Skill
-
-Copy the skill to each module:
+## Usage Example
 
 ```bash
-# In each FOLIO module
-mkdir -p .claude/skills
-cp /path/to/folio-dev-plugin/skills/document-feature/SKILL.md \
-   .claude/skills/document-feature.md
-```
+# Install marketplace
+/plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
 
-### Running the Skill
+# Implement feature on branch
+git checkout -b feature/my-feature
+# ... make changes ...
 
-After implementing a feature:
-
-```bash
-# From the feature branch
+# Document the feature
 /document-feature
 ```
 
-The skill will:
+## Open Questions
 
-1. Analyze `git diff master...HEAD`
-2. Propose a feature name for confirmation
-3. Inspect code for endpoints, caching, events, configs
-4. Interview you about unclear aspects
-5. Generate `docs/features/[feature-name].md`
-6. Update `docs/features.md` index
+| Topic | Status | Notes |
+|-------|--------|-------|
+| Configuration defaults in docs | Discuss | Should we include defaults or just reference README? |
+| Feature vs enhancement naming | Open | How to name when enhancing existing vs creating new? |
 
 ## Development Roadmap
 
 ### Phase 1: Feature Documentation (Current)
-- [x] `/document-feature` skill
-- [ ] Test on real FOLIO modules
+- [x] `/document-feature` skill (v0.3.0)
+- [x] Marketplace structure
+- [ ] Test on more FOLIO modules
 - [ ] Refine based on feedback
 
 ### Phase 2: Additional Skills
 - [ ] `/write-tests` - Generate tests from feature documentation
 - [ ] `/review-code` - Review changes against documented behavior
-- [ ] `/create-adr` - Create Architecture Decision Records
 
 ### Phase 3: Integration
 - [ ] Pre-commit hooks to validate documentation
 - [ ] CI checks for missing documentation
-- [ ] Documentation sync detection
-
-## Research Foundation
-
-This plugin is built on research into:
-
-- **README-driven development** (Tom Preston-Werner, 2010)
-- **Architecture Decision Records** (Michael Nygard, 2011)
-- **Living Documentation** (Cyrille Martraire)
-- **Docs-as-code** methodology
-- **AI-parseable formats** (Markdown + YAML frontmatter)
-- **FOLIO's microservices architecture** (Java/Spring/Quarkus)
-
-See `knowledge-base/DDD research.md` for full research details.
-
-## Contributing
-
-When adding new skills or agents:
-
-1. Follow the plugin structure conventions
-2. Document in this file why the skill exists
-3. Add examples to the knowledge base
-4. Test on real FOLIO modules before committing
 
 ## References
 
-- [Official Claude Code Plugins](https://github.com/anthropics/claude-plugins-official)
-- [Claude Code Documentation](https://code.claude.com/docs/en/plugins)
-- [FOLIO Developer Documentation](https://dev.folio.org/)
+- **Marketplace Repository**: https://github.com/yauhen-vavilkin/folio-dev-plugin
+- **Official Plugins**: https://github.com/anthropics/claude-plugins-official
+- **Claude Code Docs**: https://code.claude.com/docs/en/plugins
+- **FOLIO Developer Docs**: https://dev.folio.org/
