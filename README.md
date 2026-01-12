@@ -52,13 +52,13 @@ folio-dev-plugin/                    # Marketplace root
 │       └── README.md                # Plugin documentation
 ├── knowledge-base/                  # Shared research and best practices
 │   └── DDD research.md
-├── claude-code.md                   # Project overview and philosophy
+├── CLAUDE.md                   # Project overview and philosophy
 └── README.md                        # This file
 ```
 
 ## Philosophy
 
-This marketplace follows **document-driven development** principles. See [claude-code.md](claude-code.md) for:
+This marketplace follows **document-driven development** principles. See [CLAUDE.md](CLAUDE.md) for:
 - Why this marketplace exists
 - What we're building
 - Development roadmap
@@ -71,7 +71,7 @@ We welcome new plugins and skills for FOLIO development:
 1. Follow the [Claude Code Plugin](https://code.claude.com/docs/en/plugins) conventions
 2. Add your plugin under `plugins/your-plugin-name/`
 3. Update `marketplace.json` to include your plugin
-4. Document in `claude-code.md` when adding major features
+4. Document in `CLAUDE.md` when adding major features
 5. Add research and examples to `knowledge-base/`
 6. Test on real FOLIO modules before submitting
 
