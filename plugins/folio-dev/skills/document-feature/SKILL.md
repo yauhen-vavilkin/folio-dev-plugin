@@ -1,7 +1,7 @@
 ---
 name: document-feature
 description: This skill should be used when the user asks to "document feature", "create feature documentation", "write documentation for this feature", or discusses documenting implemented features. The skill analyzes git diff between master and current branch, infers the feature name, and generates behavioral documentation in docs/features/.
-version: 0.2.0
+version: 0.3.0
 license: Apache-2.0
 ---
 
@@ -112,13 +112,21 @@ Format: "kebab-case" (e.g., `user-permissions-cache.md`)
 - New services, caches, events, or configuration changes
 - Modified business logic in service classes
 - New or updated event handlers
+- Scheduled tasks, background jobs, or other non-endpoint features
 
-**Then, trace upward to find affected endpoints:**
+**Then, trace upward to find affected endpoints (if applicable):**
 Many features enhance existing functionality without changing controllers. To find affected endpoints:
-1. Identify the modified service classes (e.g., `CapabilityService`)
-2. Use `Grep` to find controllers that inject/use this service: `grep -r "CapabilityService" src/main/java --include="*Controller.java"`
-3. Read the controller files to extract endpoint details
-4. Document the endpoint even if the controller wasn't changed
+1. Identify the modified service class name
+2. Use `Grep` to find controllers that use this service: `grep -r "<ServiceName>" src/main/java --include="*Controller.java"`
+3. Read the controller files to extract endpoint details (`@GetMapping`, `@PostMapping`, etc.)
+4. If endpoints found: include "Endpoint(s)" section in documentation
+5. If no endpoints found: skip the "Endpoint(s)" section entirely
+
+**Not all features have endpoints.** Examples of non-endpoint features:
+- Event processors (Kafka listeners, `@EventListener`)
+- Scheduled jobs (`@Scheduled`, cron tasks)
+- Internal utilities (token refresh, data loading)
+- Background services
 
 **Also identify:**
 - **Caching**: Look for `@Cacheable`, cache configuration in `application.yml`
@@ -161,21 +169,33 @@ If the changes are minor (typo fixes, refactoring with no behavior change, test 
 
 ## Example analysis
 
+**Example 1: REST endpoint feature (with caching enhancement)**
 When you see changes like:
-- New `UserPermissionCacheService` with `@Cacheable`
-- Modified `CapabilityService.getUserPermissions()` to use the cache
-- New `UserPermissionsChangedEvent` and event handler
+- New cache service with `@Cacheable`
+- Modified service method to use the cache
+- New event and event handler for cache invalidation
 - Cache configuration in `application.yml`
 
 **Trace upward to find the endpoint:**
-1. Modified service: `CapabilityService`
-2. Find controllers: `grep -r "CapabilityService" src/main/java --include="*Controller.java"`
-3. Found: `PermissionsUsersController` injects `CapabilityService`
-4. Extract endpoint: `GET /permissions-users/{userId}`
+1. Modified service: Identify the service class name
+2. Find controllers: `grep -r "ServiceName" src/main/java --include="*Controller.java"`
+3. Found: Controller injects the service
+4. Extract endpoint: Get the HTTP method and path from `@GetMapping`, etc.
 
-You would infer this is a "user permissions cache" feature and document:
-- What: Caches user permission lookups, accessed via `GET /permissions-users/{userId}`
-- Why: Database query was slow/expensive
-- Endpoint: Documents the REST endpoint even though the controller wasn't changed
-- Caching: tenant-scoped cache with user and tenant eviction events
-- Configuration: TTL and max size variables
+Document:
+- What: Describes the observable behavior (e.g., "Returns data via API")
+- Why: Business rationale (e.g., "Improves performance")
+- Endpoint(s): Include the REST endpoint table
+- Caching: Describe cache behavior, eviction, configuration
+
+**Example 2: Event processor feature (no REST endpoint)**
+When you see changes like:
+- New Kafka listener or `@EventListener`
+- Event handling logic in a service
+- Event class definitions
+
+Since no endpoints exist, skip the "Endpoint(s)" section entirely and focus on:
+- What: Processes events from external systems
+- Why: Integrates with other services or handles async operations
+- Events consumed: What events this feature listens to
+- Events published: What events this feature emits
