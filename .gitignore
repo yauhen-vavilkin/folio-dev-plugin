@@ -1,3 +1,34 @@
-# Claude Code local settings
+# Claude Code local session data (not the plugin configs)
 .claude/
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows system files
+Thumbs.db
+Desktop.ini
+
+# Temporary files and logs
+*.log
+*.tmp
+*.temp
+.cache/
+
+# Reports (generated content - keep in repo as examples/documentation)
+# reports/ - intentionally tracked for documentation purposes
+
+# Environment files (if added)
+.env
+.env.local
+.env.*.local
 
