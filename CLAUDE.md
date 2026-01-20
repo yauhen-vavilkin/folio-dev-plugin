@@ -1,6 +1,6 @@
-# FOLIO Development Marketplace for Claude Code
+# FOLIO Development Plugin for Claude Code
 
-> A marketplace of plugins, skills, and tools for documenting features and maintaining FOLIO microservices.
+> A plugin with skills and tools for documenting features and maintaining FOLIO microservices.
 
 ## Why This Exists
 
@@ -11,40 +11,33 @@ FOLIO is a large-scale microservices architecture with dozens of Java/Spring/Qua
 - **AI context limitations**: AI agents need behavioral documentation to effectively modify and extend features
 - **Inconsistent documentation**: Different teams use different formats and approaches
 
-This marketplace provides **document-driven development** tools that keep documentation synchronized with code.
+This plugin provides **document-driven development** tools that keep documentation synchronized with code.
 
 ## What We're Building
 
-A **marketplace** (collection of plugins) containing skills, agents, and tools for FOLIO microservices development:
+A **plugin** containing skills, agents, and tools for FOLIO microservices development:
 
-- **`folio-dev` plugin**: Contains the `/document-feature` skill
+- **`/document-feature` skill**: Analyzes code changes and generates behavioral feature documentation
 - **Future**: Test generation, code review, and more skills
 
 ### Philosophy: Behavioral Documentation
 
 Following the research in `knowledge-base/DDD research.md`, we focus on **behavioral documentation**—capturing WHAT features do and WHY they exist, not HOW they're implemented.
 
-## Project Structure (Marketplace)
+## Project Structure
 
 ```
-folio-dev-plugin/                    # Marketplace root
+folio-dev-plugin/                    # Plugin root
 ├── .claude-plugin/
-│   └── marketplace.json             # Marketplace configuration
-├── plugins/
-│   └── folio-dev/                   # Individual plugin
-│       ├── .claude-plugin/
-│       │   └── plugin.json          # Plugin metadata
-│       ├── skills/
-│       │   └── document-feature/
-│       │       └── SKILL.md         # Skill definition
-│       └── README.md                # Plugin documentation
+│   └── plugin.json                  # Plugin metadata
+├── skills/
+│   └── document-feature/
+│       └── SKILL.md                 # Skill definition
 ├── knowledge-base/                  # Research and best practices
 │   └── DDD research.md
 ├── CLAUDE.md                        # This file
-└── README.md                        # Marketplace overview
+└── README.md                        # Plugin documentation
 ```
-
-**Key convention**: `marketplace.json` must be inside `.claude-plugin/`, not at root.
 
 ## Installation
 
@@ -113,7 +106,7 @@ Each feature document includes:
 ## Usage Example
 
 ```bash
-# Install marketplace
+# Install plugin
 /plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
 
 # Implement feature on branch
@@ -136,7 +129,7 @@ git checkout -b feature/my-feature
 
 ### Phase 1: Feature Documentation (Current)
 - [x] `/document-feature` skill (v0.4.0)
-- [x] Marketplace structure
+- [x] Plugin structure
 - [x] First tuning cycle (MODROLESKC-333 report)
 - [ ] Test on more FOLIO modules
 - [ ] Refine based on feedback
@@ -151,7 +144,7 @@ git checkout -b feature/my-feature
 
 ## References
 
-- **Marketplace Repository**: https://github.com/yauhen-vavilkin/folio-dev-plugin
+- **Plugin Repository**: https://github.com/yauhen-vavilkin/folio-dev-plugin
 - **Official Plugins**: https://github.com/anthropics/claude-plugins-official
 - **Claude Code Docs**: https://code.claude.com/docs/en/plugins
 - **FOLIO Developer Docs**: https://dev.folio.org/
