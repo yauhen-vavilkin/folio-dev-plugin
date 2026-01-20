@@ -5,7 +5,7 @@
   "author": {
     "name": "FOLIO Development Team"
   },
-  "homepage": "https://github.com/folio-org",
+  "homepage": "https://github.com/yauhen-vavilkin/folio-dev-plugin",
   "license": "Apache-2.0",
   "keywords": ["folio", "library", "microservices", "documentation", "java", "spring"]
 }
