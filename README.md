@@ -1,14 +1,16 @@
-# FOLIO Development Plugin for Claude Code
+# FOLIO Development Marketplace for Claude Code
 
-> Skills and tools for documenting features and maintaining FOLIO microservices.
+> A single-plugin marketplace with skills and tools for documenting features and maintaining FOLIO microservices.
 
 ## Installation
 
-Install the plugin directly from GitHub:
+Install the marketplace (which includes the folio-dev plugin) from GitHub:
 
 ```bash
 /plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
 ```
+
+This installs the `folio-dev` marketplace and makes the `/document-feature` skill available.
 
 ## Skills
 
@@ -38,11 +40,12 @@ After installing the plugin and implementing a feature on a branch:
 
 Feature documentation uses **behavioral description**—focusing on WHAT features do and WHY they exist, not HOW they're implemented.
 
-## Plugin Structure
+## Structure
 
 ```
-folio-dev-plugin/                    # Plugin root
+folio-dev-plugin/                    # Marketplace & Plugin root
 ├── .claude-plugin/
+│   ├── marketplace.json             # Marketplace metadata
 │   └── plugin.json                  # Plugin metadata
 ├── skills/
 │   └── document-feature/
@@ -52,6 +55,8 @@ folio-dev-plugin/                    # Plugin root
 ├── CLAUDE.md                        # Project overview and philosophy
 └── README.md                        # This file
 ```
+
+This is a **single-plugin marketplace** where the marketplace and plugin coexist in the same directory.
 
 ## Philosophy
 

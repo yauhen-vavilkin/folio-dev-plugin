@@ -1,6 +1,6 @@
-# FOLIO Development Plugin for Claude Code
+# FOLIO Development Marketplace for Claude Code
 
-> A plugin with skills and tools for documenting features and maintaining FOLIO microservices.
+> A single-plugin marketplace with skills and tools for documenting features and maintaining FOLIO microservices.
 
 ## Why This Exists
 
@@ -15,10 +15,18 @@ This plugin provides **document-driven development** tools that keep documentati
 
 ## What We're Building
 
-A **plugin** containing skills, agents, and tools for FOLIO microservices development:
+A **single-plugin marketplace** containing skills, agents, and tools for FOLIO microservices development:
 
 - **`/document-feature` skill**: Analyzes code changes and generates behavioral feature documentation
 - **Future**: Test generation, code review, and more skills
+
+### Architecture: Single-Plugin Marketplace
+
+We use a "single-plugin marketplace" pattern where:
+- The repository serves as both a marketplace AND a plugin
+- `marketplace.json` defines the marketplace and points to "." (current directory) as the plugin source
+- `plugin.json` defines the plugin metadata
+- This allows direct installation via `/plugin install https://github.com/...` while keeping the plugin structure at the root
 
 ### Philosophy: Behavioral Documentation
 
@@ -27,8 +35,9 @@ Following the research in `knowledge-base/DDD research.md`, we focus on **behavi
 ## Project Structure
 
 ```
-folio-dev-plugin/                    # Plugin root
+folio-dev-plugin/                    # Marketplace & Plugin root
 ├── .claude-plugin/
+│   ├── marketplace.json             # Marketplace metadata (defines marketplace with one plugin)
 │   └── plugin.json                  # Plugin metadata
 ├── skills/
 │   └── document-feature/
@@ -36,8 +45,10 @@ folio-dev-plugin/                    # Plugin root
 ├── knowledge-base/                  # Research and best practices
 │   └── DDD research.md
 ├── CLAUDE.md                        # This file
-└── README.md                        # Plugin documentation
+└── README.md                        # Marketplace & plugin documentation
 ```
+
+**Note**: This is a "single-plugin marketplace" where the marketplace and plugin are in the same directory. The marketplace.json points to "." (current directory) as the plugin source.
 
 ## Installation
 
@@ -83,6 +94,12 @@ Each feature document includes:
 - **Generic patterns, not module-specific**: Use placeholders, not specific class names
 - **Endpoint tracing**: When service changes, trace upward to find affected controllers
 - **Handle non-endpoint features**: Event processors, scheduled jobs, internal utilities
+
+### Architecture Decisions
+- **Single-plugin marketplace pattern**: Repository contains both marketplace.json and plugin files at root
+  - Allows direct GitHub installation via `/plugin install`
+  - marketplace.json points to "." as plugin source
+  - Simpler than multi-plugin marketplace structure for single-plugin use case
 
 ### Skill Version History
 - **0.1.0**: Initial version
