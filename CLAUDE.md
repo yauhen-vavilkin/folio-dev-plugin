@@ -15,18 +15,10 @@ This plugin provides **document-driven development** tools that keep documentati
 
 ## What We're Building
 
-A **single-plugin marketplace** containing skills, agents, and tools for FOLIO microservices development:
+A **marketplace** containing plugins, skills, agents, and tools for FOLIO microservices development:
 
-- **`/document-feature` skill**: Analyzes code changes and generates behavioral feature documentation
-- **Future**: Test generation, code review, and more skills
-
-### Architecture: Single-Plugin Marketplace
-
-We use a "single-plugin marketplace" pattern where:
-- The repository serves as both a marketplace AND a plugin
-- `marketplace.json` defines the marketplace and points to "." (current directory) as the plugin source
-- `plugin.json` defines the plugin metadata
-- This allows direct installation via `/plugin install https://github.com/...` while keeping the plugin structure at the root
+- **`folio-dev` plugin**: Contains the `/folio-dev:document-feature` skill for behavioral documentation
+- **Future plugins**: Test generation, code review, and more can be added to this marketplace
 
 ### Philosophy: Behavioral Documentation
 
@@ -35,25 +27,44 @@ Following the research in `knowledge-base/DDD research.md`, we focus on **behavi
 ## Project Structure
 
 ```
-folio-dev-plugin/                    # Marketplace & Plugin root
+folio-dev-plugin/                    # Marketplace root
 ├── .claude-plugin/
-│   ├── marketplace.json             # Marketplace metadata (defines marketplace with one plugin)
-│   └── plugin.json                  # Plugin metadata
-├── skills/
-│   └── document-feature/
-│       └── SKILL.md                 # Skill definition
-├── knowledge-base/                  # Research and best practices
+│   └── marketplace.json             # Marketplace metadata
+├── plugins/
+│   └── folio-dev/                   # Individual plugin
+│       ├── .claude-plugin/
+│       │   └── plugin.json          # Plugin metadata
+│       ├── skills/
+│       │   └── document-feature/
+│       │       └── SKILL.md         # Skill definition
+│       └── README.md                # Plugin documentation
+├── knowledge-base/                  # Research and best practices (shared across plugins)
 │   └── DDD research.md
 ├── CLAUDE.md                        # This file
-└── README.md                        # Marketplace & plugin documentation
+└── README.md                        # Marketplace overview
 ```
 
-**Note**: This is a "single-plugin marketplace" where the marketplace and plugin are in the same directory. The marketplace.json points to "." (current directory) as the plugin source.
+**Architecture**: This follows the **multi-plugin marketplace pattern** (like `anthropics/claude-plugins-official`), where:
+- Plugins live in `plugins/plugin-name/` subdirectories
+- Each plugin has its own `.claude-plugin/plugin.json`
+- `marketplace.json` points to plugins via `source: "./plugins/plugin-name"`
+- Allows adding more plugins in the future without restructuring
 
 ## Installation
 
+1. Install the marketplace:
 ```bash
 /plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
+```
+
+2. Install the plugin:
+```bash
+/plugin install folio-dev@folio-dev
+```
+
+3. Use the skill:
+```bash
+/folio-dev:document-feature
 ```
 
 ## Documentation Format
@@ -96,10 +107,11 @@ Each feature document includes:
 - **Handle non-endpoint features**: Event processors, scheduled jobs, internal utilities
 
 ### Architecture Decisions
-- **Single-plugin marketplace pattern**: Repository contains both marketplace.json and plugin files at root
-  - Allows direct GitHub installation via `/plugin install`
-  - marketplace.json points to "." as plugin source
-  - Simpler than multi-plugin marketplace structure for single-plugin use case
+- **Multi-plugin marketplace pattern**: Follows `anthropics/claude-plugins-official` structure
+  - Plugins in `plugins/` subdirectories with individual `plugin.json` files
+  - `marketplace.json` at root with `source: "./plugins/plugin-name"`
+  - Allows adding future plugins (test generation, code review, etc.) without restructuring
+  - Knowledge base shared across all plugins at root level
 
 ### Skill Version History
 - **0.1.0**: Initial version
@@ -123,15 +135,18 @@ Each feature document includes:
 ## Usage Example
 
 ```bash
-# Install plugin
+# Install marketplace
 /plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
+
+# Install the folio-dev plugin from the marketplace
+/plugin install folio-dev@folio-dev
 
 # Implement feature on branch
 git checkout -b feature/my-feature
 # ... make changes ...
 
 # Document the feature
-/document-feature
+/folio-dev:document-feature
 ```
 
 ## Open Questions

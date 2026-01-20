@@ -1,24 +1,32 @@
 # FOLIO Development Marketplace for Claude Code
 
-> A single-plugin marketplace with skills and tools for documenting features and maintaining FOLIO microservices.
+> A marketplace of plugins, skills, and tools for documenting features and maintaining FOLIO microservices.
 
 ## Installation
 
-Install the marketplace (which includes the folio-dev plugin) from GitHub:
-
+1. **Install the marketplace:**
 ```bash
 /plugin install https://github.com/yauhen-vavilkin/folio-dev-plugin
 ```
 
-This installs the `folio-dev` marketplace and makes the `/document-feature` skill available.
+2. **Install plugins from the marketplace:**
+```bash
+/plugin install folio-dev@folio-dev
+```
 
-## Skills
+3. **Use the skills:**
+```bash
+/folio-dev:document-feature
+```
 
-### document-feature
+## Plugins
 
-Analyzes code changes and generates behavioral feature documentation.
+### folio-dev
 
-**Invocation:** `/document-feature`
+Skills and tools for FOLIO microservices development with behavioral documentation.
+
+**Skills:**
+- `/folio-dev:document-feature` - Analyzes code changes and generates behavioral feature documentation
 
 **Workflow:**
 1. Analyzes `git diff master...HEAD`
@@ -28,13 +36,7 @@ Analyzes code changes and generates behavioral feature documentation.
 5. Generates `docs/features/[feature-name].md`
 6. Updates `docs/features.md` index
 
-**Quick Start:**
-
-After installing the plugin and implementing a feature on a branch:
-
-```bash
-/document-feature
-```
+See [plugins/folio-dev/README.md](plugins/folio-dev/README.md) for details.
 
 ## Documentation Format
 
@@ -43,20 +45,24 @@ Feature documentation uses **behavioral description**—focusing on WHAT feature
 ## Structure
 
 ```
-folio-dev-plugin/                    # Marketplace & Plugin root
+folio-dev-plugin/                    # Marketplace root
 ├── .claude-plugin/
-│   ├── marketplace.json             # Marketplace metadata
-│   └── plugin.json                  # Plugin metadata
-├── skills/
-│   └── document-feature/
-│       └── SKILL.md                 # Skill definition
-├── knowledge-base/                  # Research and best practices
+│   └── marketplace.json             # Marketplace metadata
+├── plugins/
+│   └── folio-dev/                   # Individual plugin
+│       ├── .claude-plugin/
+│       │   └── plugin.json          # Plugin metadata
+│       ├── skills/
+│       │   └── document-feature/
+│       │       └── SKILL.md         # Skill definition
+│       └── README.md                # Plugin documentation
+├── knowledge-base/                  # Shared research and best practices
 │   └── DDD research.md
 ├── CLAUDE.md                        # Project overview and philosophy
 └── README.md                        # This file
 ```
 
-This is a **single-plugin marketplace** where the marketplace and plugin coexist in the same directory.
+This follows the **multi-plugin marketplace pattern** (like `anthropics/claude-plugins-official`), allowing future plugins to be added easily.
 
 ## Philosophy
 
