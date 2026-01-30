@@ -1,7 +1,7 @@
 ---
 name: document-feature
-description: This skill should be used when the user asks to "document feature", "create feature documentation", "write documentation for this feature", or discusses documenting implemented features. The skill analyzes git diff between master and current branch, infers the feature name, and generates behavioral documentation in docs/features/.
-version: 0.4.0
+description: Use when the user asks to document an implemented feature. Analyze the diff from the base branch, infer the feature boundary and name, and generate behavioral feature documentation under docs/features/.
+version: 0.5.0
 license: Apache-2.0
 ---
 
@@ -9,293 +9,240 @@ license: Apache-2.0
 
 You are a documentation specialist. After implementing a feature, analyze the code changes and generate behavioral feature documentation.
 
-## Your goal
+## Scope and assumptions (this skill is intentionally scoped)
 
-Create feature documentation that describes **WHAT** the feature does and **WHY** it exists—not HOW it's implemented. The documentation should be understandable to:
-- A developer who wants to understand the module
-- An AI agent that needs to modify or extend the feature
-- A user who wants to know what the feature does
+This skill targets backend modules with these common characteristics:
 
-## Critical principle: Feature = Observable Behavior
+- Java service built on Spring (Spring MVC) or Quarkus (JAX-RS)
+- PostgreSQL persistence
+- REST API documented in OpenAPI YAML (preferred source of truth for endpoints)
+- Kafka used for message consumption/production
+- Deployed as multiple instances behind a load balancer (clustered)
 
-**A feature is what users or external systems can interact with.** Implementation details (caching, events, internal utilities) are **aspects** of features, not features themselves.
+If a repo deviates, proceed best-effort but follow the evidence rules.
 
-| This is a FEATURE | This is an ASPECT (not a feature) |
-|-------------------|-----------------------------------|
-| User permission lookup | Permission cache |
-| Capability registration | Cache eviction |
-| Role assignment | Event publishing |
+## Non-negotiables
 
-**Name features after behavior, not implementation:**
-- ✅ `user-permission-lookup.md` (what it does)
-- ❌ `user-permissions-cache.md` (how it's optimized)
+### Feature = observable behavior
 
-## Documentation structure
+**A feature is what external consumers can observe or interact with.** Implementation mechanisms are aspects of features.
 
-Each feature document lives at `docs/features/[feature-name].md` using this template:
+| Feature (behavior) | Aspect (mechanism) |
+|--------------------|--------------------|
+| Resource lookup API | Cache for lookup |
+| Validation rules | Exception mapping |
+| Event-driven state sync | Kafka listener wiring |
+
+Name features after behavior, not the mechanism:
+
+- Good: `resource-lookup`, `hold-request-validation`, `tenant-sync-processing`
+- Bad: `resource-cache`, `validation-refactor`, `kafka-handler`
+
+### Evidence-only rule (no guessing)
+
+Only document endpoints/topics/config/integrations that you can point to in repo evidence:
+
+- OpenAPI spec (`*.yml`/`*.yaml` containing `openapi:` or `swagger:`)
+- Application config (`application.yml`, `application.yaml`, `application.properties`)
+- Code evidence (annotations, constants, clearly named configuration keys)
+- README or other checked-in docs
+
+If you cannot prove it, omit it. Do not infer "likely" dependencies.
+
+### Questions
+
+- Write/update docs immediately.
+- Ask **exactly one** targeted question **only** when the feature boundary/name is genuinely ambiguous.
+- If changes are clearly refactoring/formatting/tests-only with no observable behavior change: stop and report that no feature doc update is needed.
+
+## Outputs
+
+For each feature affected:
+
+- `docs/features/<feature_id>.md` (create directories if missing)
+- `docs/features.md` index (create if missing; if present, update minimally in existing style)
+
+## Feature doc frontmatter
+
+Feature docs must include exactly these required frontmatter fields:
+
+- `feature_id`: must equal the file name (without `.md`)
+- `title`: human-readable Title Case
+- `updated`: `YYYY-MM-DD` (use today)
+
+Existing docs may have extra frontmatter keys; preserve them. Do not add new keys (for example, do not introduce `owners`).
+
+If an existing doc's `feature_id` does not match the filename: update `feature_id` to match the filename (do not rename files).
+
+## Documentation structure (fixed order; omit non-applicable sections)
+
+Each feature document lives at `docs/features/<feature_id>.md` using this template.
 
 ```markdown
 ---
-feature_id: [kebab-case-feature-name]
-title: [Human-readable title]
-status: active
-updated: [YYYY-MM-DD]
+feature_id: <kebab-case-id>
+title: <Human Title>
+updated: <YYYY-MM-DD>
 ---
 
-# [Feature name]
+# <Human Title>
 
 ## What it does
-[2-3 sentences describing observable behavior. What does this feature do from an external perspective?]
+<2-3 sentences describing observable behavior from an external perspective.>
 
 ## Why it exists
-[Business rationale, problem solved, performance justification. Why was this feature needed?]
+<Business rationale: what problem it solves and why this behavior matters.>
 
 ## Entry point(s)
-[Include the appropriate section based on entry point type - see below]
+<Choose the relevant entry point representation(s) below. Omit this section only if the feature has no clear entry point.>
 
 ## Business rules and constraints
-- [Rule 1 - plain language constraint]
-- [Rule 2]
-[What are the behavioral invariants? What must always be true?]
+- <Rule 1 in plain language>
+- <Rule 2>
+
+## Error behavior (if applicable)
+- <Externally visible error conditions and outcomes: status codes, validation failures, retry/idempotency expectations.>
 
 ## Caching (if applicable)
-[Describe caching as an internal optimization of this feature]
-- What is cached
-- Cache key structure (e.g., tenant-scoped)
-- Cache eviction triggers
+<Document caching only when it affects externally observable behavior or operational correctness in a cluster (e.g., staleness windows, invalidation triggers).>
 
 ## Configuration (if applicable)
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| CONFIG_VAR_NAME | default_value | Description |
+| Variable | Purpose |
+|----------|---------|
+| <property.key or ENV_VAR> | <What it controls in this feature> |
 
-## Dependencies and interactions
-- **Consumed by**: [What modules/services consume this feature?]
-- **Depends on**: [What services/features does this depend on?]
-- **Events published**: [If applicable]
-- **Events consumed**: [If applicable]
+## Dependencies and interactions (if applicable)
+<Only feature-relevant, evidenced external interactions.>
 ```
 
-### Entry point sections by type
+### Entry point representations
 
-**For REST endpoint features:**
+REST (prefer OpenAPI spec):
+
 ```markdown
 ## Entry point(s)
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /permissions/users/{id} | Returns list of permissions for a user |
+| GET | /resource/{id} | Returns the resource representation |
 ```
 
-**For Kafka consumer features:**
+Kafka consumer (entry point only when the feature is triggered by messages):
+
 ```markdown
 ## Entry point(s)
 | Type | Topic | Description |
 |------|-------|-------------|
-| Kafka Consumer | `mgr-tenant-entitlements.capability` | Processes capability change events |
+| Kafka Consumer | <topic-name or property-key> | Processes <event> messages |
 
 ### Event processing
-- **When processed**: On each message from the topic
-- **Event types handled**: CREATE, UPDATE, DELETE
-- **Processing behavior**: [What happens when event is received]
+- When processed: <on each message / batched / etc., if evidenced>
+- Event types handled: <if evidenced>
+- Processing behavior: <observable effects and constraints>
 ```
 
-**For scheduled job features:**
+Scheduled job:
+
 ```markdown
 ## Entry point(s)
 | Type | Schedule | Description |
 |------|----------|-------------|
-| Scheduled Job | Every 5 minutes | Refreshes token cache |
+| Scheduled Job | <cron/fixed-delay> | Performs <behavior> |
 ```
 
-**For internal event features:**
+Internal events (only if they are a meaningful entry point for behavior):
+
 ```markdown
 ## Entry point(s)
 | Type | Event | Description |
 |------|-------|-------------|
-| Internal Event | `UserPermissionsChangedEvent` | Triggered when user permissions are modified |
+| Internal Event | <event-class or name> | Triggers <behavior> |
 ```
 
-## The index file
+## The index file (`docs/features.md`)
 
-Maintain `docs/features.md` as a human-readable table of contents with this structure:
+If `docs/features.md` does not exist, create a minimal index:
 
 ```markdown
 # Module Features
 
 This module provides the following features:
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| [Feature Name](features/feature-name.md) | One-sentence description | Active |
-
-## Quick Reference
-
-- **Caching**: [summary of what's cached across the module]
-- **Events**: [summary of events published/consumed]
-- **External APIs**: [summary of endpoints consumed from other services]
+| Feature | Description |
+|---------|-------------|
+| [<Human Title>](features/<feature_id>.md) | <One-sentence behavioral description> |
 ```
 
-## Your workflow
+If it exists but uses a different format, update minimally in the existing style (do not rewrite/normalize).
 
-### 1. Analyze changes
+## Workflow
 
-Run `git diff master...HEAD --stat` to get an overview. Then read the actual diff to understand:
-- What packages were changed?
-- What entry points were modified or created?
-- What services changed?
-- Any new events, caches, or configuration?
+### 1. Preflight
 
-### 2. Identify entry points and observable behavior
+1. Compute the diff range:
+   - Primary: `git diff master...HEAD --stat` and then the full diff.
+   - If `master` is missing: automatically fallback to `main`, else to `origin/HEAD`.
+2. Determine whether changes are documentation/tests/formatting-only with no observable behavior change.
+   - If yes: stop and report "No feature doc update needed".
+3. Locate OpenAPI specs (do not assume one canonical location):
+   - Common: `src/main/resources/swagger/*.yml` / `*.yaml`
+   - Also search under `src/main/resources/` for YAML containing `openapi:` or `swagger:`
 
-**First, identify ALL entry points in the changes:**
+### 2. Identify features (may be multiple)
 
-| Pattern to look for | Entry point type |
-|---------------------|------------------|
-| `@RestController`, `@GetMapping`, `@PostMapping` | REST endpoint |
-| `@KafkaListener` | Kafka consumer |
-| `@Scheduled` | Scheduled job |
-| `@EventListener`, `@TransactionalEventListener` | Internal event handler |
+1. Identify distinct observable behavior changes. If multiple independent behaviors are clearly changed, treat them as multiple features by default.
+2. Infer a behavior-based `feature_id` for each feature.
+3. Ask one question only if the boundary/name is truly ambiguous; propose a default split/name.
 
-**Then ask: "What user-observable behavior changed?"**
+### 3. Identify entry points (spec-first)
 
-The feature is what external consumers interact with. Caching, events, and internal utilities are aspects of features, not features themselves.
+For each feature:
 
-### 3. Clarify feature boundaries with user
+1. REST:
+   - If OpenAPI spec exists: treat it as source of truth for method/path/operation intent.
+   - If spec is missing/incomplete: derive from Spring MVC / JAX-RS annotations and explicitly note that OpenAPI was not found/used.
+2. Kafka:
+   - Treat topics as contracts.
+   - If a topic is referenced via `${property.key}`: document the property key (do not guess the resolved topic name).
+3. Scheduled jobs/internal events:
+   - Document only if they act as meaningful triggers for observable behavior.
 
-**IMPORTANT: When changes touch multiple concerns, ASK the user:**
+### 4. Extract behavior details
 
-> "The changes touch [cache/events/multiple services]. Help me understand the feature boundary:
-> 1. Is this a NEW feature, or adding behavior to an EXISTING feature?
-> 2. What is the primary user-observable behavior?
-> 3. [If events are involved] Are these new event handlers, or adding logic to existing ones?"
+For each feature, document only what is evidenced:
 
-**Example clarification:**
-- Changes add cache eviction to existing event handlers → Document as "Caching" section in existing feature
-- Changes create new Kafka listener → Document as new event processing feature
+- Business rules and constraints (validation, invariants, authorization/visibility rules)
+- Error behavior when externally visible (status codes, error payload shape if evidenced, retry/idempotency expectations)
+- Cluster-relevant correctness concerns when they matter (idempotency, concurrency/locking, staleness windows)
+- Database behavior only when it changes externally observable outcomes (e.g., new uniqueness constraints causing new validation failures)
 
-### 4. Infer feature name (behavior-based)
+### 5. Configuration (only when found)
 
-Based on the observable behavior, propose **1-3 feature name options**. Names must reflect behavior, not implementation:
+1. Search for feature-relevant properties in `application.yml`/`application.properties`.
+2. Document properties as `Variable | Purpose`.
+3. If an env var mapping is explicit (e.g., `${ENV_VAR:...}`), document both the property and the env var.
+4. If no configuration knobs are found: omit the `Configuration` section.
 
-| Changes observed | Bad name | Good name |
-|------------------|----------|-----------|
-| Cache for permission lookups | `user-permissions-cache` | `user-permission-lookup` |
-| Kafka listener for capabilities | `capability-kafka-handler` | `capability-event-processing` |
-| Scheduled token refresh | `token-refresh-scheduler` | `token-management` |
+### 6. Dependencies and interactions (feature-relevant only)
 
-Ask user to confirm or provide the correct name.
+Document external interactions only when relevant to the feature and evidenced.
 
-### 5. Deep code inspection
+- Outgoing REST calls to other modules:
+  - Document as "Depends on: <module/system>" and include endpoint paths only if proven from code/spec.
+- Kafka:
+  - Prefer documenting topics and event contracts.
+  - Avoid listing class/method names as part of the contract.
 
-**Read the changed files** to understand:
-- The complete flow from entry point to response/effect
-- Business rules and constraints
-- Error handling behavior
-- Configuration that affects behavior
+If no external interactions are found for the feature: omit the `Dependencies and interactions` section.
 
-**For REST features, verify the endpoint exists:**
-1. Identify the service class being modified
-2. Find controllers: `grep -rn "ServiceName" src/main/java --include="*Controller.java"`
-3. Check OpenAPI/Swagger specs if available
-4. Document the actual endpoint path and method
+### 7. Write docs
 
-**For Kafka features, document:**
-- Topic name (from `@KafkaListener` annotation or properties)
-- Event types handled
-- Processing behavior and side effects
+1. Ensure `docs/features/` exists.
+2. Create/update `docs/features/<feature_id>.md` for each feature.
+3. Set `updated` to today.
+4. Update/create `docs/features.md` minimally.
 
-### 6. Interview the user
+## Quick sanity checks
 
-If any of the following are unclear from the code, ask the user:
-- **Business rationale**: Why was this feature needed? What problem does it solve?
-- **Configuration choices**: Why was this TTL/size chosen? What are the tradeoffs?
-- **Edge cases**: Are there any special behaviors or constraints not obvious from code?
-
-### 7. Generate documentation
-
-- Create `docs/features/[feature-name].md` using the appropriate template
-- Update `docs/features.md` to include the new feature in the table of contents
-- Use today's date in the `updated` frontmatter field
-- Write files directly—do not ask for approval
-
-### 8. Handle existing documentation
-
-If documentation already exists for the feature:
-- Read the existing file
-- Update relevant sections based on new changes
-- Preserve content that remains accurate
-- Update the date in frontmatter
-
-### 9. Skip trivial changes
-
-If the changes are minor (typo fixes, refactoring with no behavior change, test updates), inform the user that these changes don't warrant feature documentation and ask if they want to proceed anyway.
-
-## Important notes
-
-- **File naming**: Always use kebab-case based on behavior (e.g., `user-permission-lookup.md`)
-- **No owners field**: Do not include an `owners` field in the frontmatter
-- **Behavioral focus**: Describe what the system does, not how the code works
-- **Caching is an aspect**: Document caching within the feature it optimizes, not as separate feature
-- **Configuration relevance**: Only document configuration that affects the feature's behavior
-- **External context**: Mention other modules/services that interact with this feature
-
-## Example analysis
-
-**Example 1: REST endpoint feature with caching optimization**
-
-Changes observed:
-- New `UserPermissionCacheService` with `@Cacheable`
-- Cache eviction via `UserPermissionsCacheEvictor`
-- Event handlers for cache invalidation
-- Cache configuration in `application.yml`
-
-**Step 1: Find the entry point**
-```bash
-grep -rn "UserPermissionCacheService" src/main/java --include="*Controller.java"
-# Found: PermissionsUsersController uses CapabilityService which uses UserPermissionCacheService
-```
-
-**Step 2: Identify the feature**
-- Entry point: `GET /permissions/users/{id}`
-- Observable behavior: Returns user permissions
-- Caching is an optimization aspect
-
-**Step 3: Document as `user-permission-lookup.md`**
-- What: Returns permissions for a user
-- Why: Authorization checks need quick permission lookups
-- Entry point: REST endpoint table
-- Caching: Section describing the optimization
-- Events: Cache eviction triggers
-
-**Example 2: Kafka consumer feature (no REST endpoint)**
-
-Changes observed:
-- New `@KafkaListener` for capability events
-- Event processing logic
-- No controller changes
-
-**Step 1: Identify entry point**
-- Topic: `mgr-tenant-entitlements.capability`
-- Event types: CREATE, UPDATE, DELETE
-
-**Step 2: Document as `capability-event-processing.md`**
-- What: Processes capability changes from external systems
-- Why: Keeps local capability registry synchronized
-- Entry point: Kafka consumer table
-- Event processing section with behavior details
-
-**Example 3: Adding behavior to existing feature**
-
-Changes observed:
-- Added cache eviction calls to existing event handlers
-- No new entry points
-
-**Step 1: Clarify with user**
-> "The changes add cache eviction to existing event handlers. Is this a new feature or enhancing an existing one?"
-
-User: "Enhancing existing user permission lookup with cache eviction."
-
-**Step 2: Update existing documentation**
-- Update `user-permission-lookup.md`
-- Add/update "Caching" section with eviction behavior
-- Update the date
+- Feature names reflect behavior (not caching/events/implementation).
+- Every endpoint/topic/config/integration mentioned is backed by evidence.
+- Sections are in fixed order; non-applicable sections are omitted.
